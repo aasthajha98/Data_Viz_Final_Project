@@ -16,7 +16,7 @@ library(sf)
 library(shinythemes)
 
 
-survey_data = read.csv('survey.csv')
+survey_data = read.csv('survey_cleaned.csv')
 
 us_data = survey_data %>%
   filter(Country == 'United States')
@@ -57,6 +57,8 @@ merged_us_data_geom = merge(us_data,
                             by.y = "NAME")
 
 
+us_data %>% 
+  mutate(age_bin = cut(Age, breaks=c(18, 30, 40, 50, 60, 70)))
 
 
 
@@ -74,6 +76,16 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                       label = "Tech Company?:",
                       choices = sort(unique(us_data$tech_company)),
                       selected = "Yes"),
+          selectInput(inputId= "Gender",
+                      label = "Gender:",
+                      choices = sort(unique(us_data$Gender)),
+                      selected =  levels(us_data$Gender),
+                      multiple = TRUE),
+          selectInput(inputId= "Age",
+                      label = "Age:",
+                      choices = unique(us_data$age_bin),
+                      selected =  levels(us_data$age_bin),
+                      multiple = TRUE),
           dateRangeInput(inputId = "input_date",
                          label = "Date Range",
                          start = "2014-08-27",
