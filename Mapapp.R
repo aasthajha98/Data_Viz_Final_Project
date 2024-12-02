@@ -13,14 +13,18 @@ survey_data <- read.csv("survey_cleaned.csv")
 survey_data <- survey_data %>%
   mutate(
     age_bin = case_when(
-      Age >= 18 & Age <= 24 ~ "18-24",
-      Age >= 25 & Age <= 34 ~ "25-34",
-      Age >= 35 & Age <= 44 ~ "35-44",
-      Age >= 45 & Age <= 54 ~ "45-54",
-      Age >= 55 & Age <= 64 ~ "55-64",
-      Age >= 65 ~ "65+",
+      Age >= 18 & Age <= 30 ~ "18-30",
+      Age >= 30 & Age <= 45 ~ "30-45",
+      Age >= 45 & Age <= 60 ~ "45-60",
+      Age >= 60 ~ "60+",
       TRUE ~ "Unknown"
     )
+  )
+
+survey_data <- survey_data %>%
+  mutate(
+    age_bin = factor(age_bin, levels = c("18-30", "30-45", "45-60", "60+"), ordered = TRUE),
+    no_employees = factor(no_employees, levels = c("1-5", "6-25", "26-100", "100-500", "500-1000", "More than 1000"), ordered = TRUE)
   )
 
 
@@ -45,7 +49,7 @@ ui <- fluidPage(
       pickerInput(
         inputId = "age_bin",
         label = "Filter by Age Bin",
-        choices = unique(survey_data$age_bin),
+        choices = unique(levels(survey_data$age_bin)),
         selected = unique(survey_data$age_bin),
         multiple = TRUE,
         options = list(`actions-box` = TRUE)
@@ -61,7 +65,7 @@ ui <- fluidPage(
       pickerInput(
         inputId = "no_employees",
         label = "Filter by Number of Employees",
-        choices = unique(survey_data$no_employees),
+        choices = unique(levels(survey_data$no_employees)),
         selected = unique(survey_data$no_employees),
         multiple = TRUE,
         options = list(`actions-box` = TRUE)
@@ -84,7 +88,7 @@ ui <- fluidPage(
       )
     ),
     mainPanel(
-      plotlyOutput("choropleth", height = "800px", width = "1200px")  # Matches server dimensions
+      plotlyOutput("choropleth", height = "600px", width = "900px")  # Matches server dimensions
     )
   )
 )
@@ -122,9 +126,15 @@ server <- function(input, output, session) {
         "Avg Work Interference: ", round(work_interfere_avg, 2)
       )), color = "white") +
       scale_fill_viridis_c(option = "plasma", na.value = "grey90") +
+      scale_x_continuous(limits = c(-125, -67))+
+      scale_y_continuous(limits = c(25, 50))+
       coord_sf() +
       theme_minimal(base_size = 14) +
       theme(
+        axis.title = element_blank(),  # Remove axis titles
+        axis.text = element_blank(),   # Remove axis text
+        axis.ticks = element_blank(),  # Remove axis ticks
+        panel.grid = element_blank(),  # Remove gridlines
         plot.margin = margin(20, 20, 20, 20),
         plot.background = element_rect(fill = "white", color = NA)
       ) +
@@ -134,10 +144,8 @@ server <- function(input, output, session) {
       )
     
     # Convert ggplot to plotly for interactivity
-    ggplotly(p, tooltip = "text") %>%
+    ggplotly(p, tooltip = "text", width = 900, height = 600) %>%
       layout(
-        height = 800,  # Increase height of the map
-        width = 1200,  # Increase width of the map
         dragmode = "zoom",  # Enable zooming and panning
         margin = list(l = 0, r = 0, t = 50, b = 0)  # Reduce margins
       )
