@@ -71,8 +71,8 @@ server <- function(input, output) {
     req(wordcloud_data())
     
     custom_colors <- c(brewer.pal(8, "Set2"), brewer.pal(12, "Set3"), brewer.pal(12, 'Paired'))
-    custom_colors <- custom_colors[!custom_colors %in% c("#FFFFB3", "#FFED6F")]
-    custom_colors <- rep(custom_colors, length.out = input$numWords)
+    custom_colors <- custom_colors[!custom_colors %in% c("#FFFFB3", "#FFED6F", "#FFFF99")]
+    custom_colors <- rep(custom_colors, length.out = 200)
     
     wordcloud2(wordcloud_data(),
                size = 1.1,
