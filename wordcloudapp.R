@@ -7,6 +7,7 @@ library(RColorBrewer)
 
 #load the dataset
 dataset <- read.csv("survey_cleaned.csv", stringsAsFactors = FALSE)
+dataset <- dataset %>% filter(!is.na(comments) & comments != "")
 
 # Define UI
 ui <- fluidPage(
