@@ -14,6 +14,9 @@ library(leaflet)
 library(leaflet.extras)
 library(sf)
 library(shinythemes)
+library(tm)
+library(wordcloud)
+
 
 
 survey_data = read.csv('survey_cleaned.csv')
@@ -61,6 +64,19 @@ us_data %>%
   mutate(age_bin = cut(Age, breaks=c(18, 30, 40, 50, 60, 70)))
 
 
+corpus = Corpus(VectorSource(text))
+corpus = tm_map(corpus, content_transformer(tolower))
+corpus = tm_map(corpus, removePunctuation)
+corpus = tm_map(corpus, removeNumbers)
+corpus = tm_map(corpus, removeWords, stopwords("SMART"))
+
+dtm = TermDocumentMatrix(corpus,
+                           control = list(minWordLength = 1))
+
+m = as.matrix(dtm)
+
+sort(rowSums(m), decreasing = TRUE)
+
 
 
 # Define UI for application that draws a histogram
@@ -99,7 +115,15 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
         mainPanel(
           tabsetPanel(
             tabPanel("Map", leafletOutput("avg_map", height = 600)),
-            tabPanel("Bar Chart", plotOutput('bar_chart'), plotOutput('bar_chart_2'))
+            tabPanel("Bar Chart", plotOutput('bar_chart'), plotOutput('bar_chart_2')),
+            tagPanel("Word Cloud", 
+                     sliderInput("freq_words",
+                                 "Minimum Frequency:",
+                                 min = 1,  max = 50, value = 15),
+                     sliderInput("max_words",
+                                 "Maximum Number of Words:",
+                                 min = 1,  max = 300,  value = 100),
+                     plotOutput('word_cloud'))
           )
         )
     )
@@ -111,6 +135,25 @@ server <- function(input, output) {
     d <- reactive({
       us_data %>%
         filter(tech_company==input$input_tech)
+    })
+    
+    terms <- reactive({
+      survey_data %>% filter()
+      isolate({
+        withProgress({
+          setProgress(message = "Processing corpus...")
+          getTermMatrix(input$selection)
+        })
+      })
+    })
+    
+    wordcloud_rep <- repeatable(wordcloud)
+    
+    output$plot <- renderPlot({
+      v <- terms()
+      wordcloud_rep(names(v), v, scale=c(4,0.5),
+                    min.freq = input$freq_words, max.words=input$max_words,
+                    colors=brewer.pal(8, "Dark2"))
     })
     
     d_agg = reactive({us_data %>%
