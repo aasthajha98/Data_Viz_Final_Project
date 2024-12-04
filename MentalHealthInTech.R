@@ -86,19 +86,20 @@ ui <- navbarPage(
   # Add an overall title for the navbar if needed
   "Mental Health Survey Dashboard",
   
-tabPanel("Crosstabs", 
+tabPanel("Insights", 
            fluidPage(
              titlePanel("Mental Health Survey Visualizations"),
              sidebarLayout(
                sidebarPanel(
                  selectInput("plot_choice", "Choose a Plot:",
                              choices = c(
-                               "Age vs Work Interference",
                                "Company Size vs Mental Health Benefits",
                                "Remote Work vs Treatment",
                                "Mental vs Physical Health Consequences",
                                "Supervisor Support vs Coworker Support",
-                               "Treatment vs Family History"
+                               "Treatment vs Family History",
+                               "Age vs Work Interference"
+                               
                              )
                  ),
                  selectInput("gender2", "Filter by Gender:",
@@ -113,7 +114,7 @@ tabPanel("Crosstabs",
            )
   ),
   
-  tabPanel("Map", 
+  tabPanel("Work Interference in the US", 
            fluidPage(
              titlePanel("Choropleth of Work Interference by State"),
              sidebarLayout(
@@ -165,9 +166,9 @@ tabPanel("Crosstabs",
              )
            )
   ),
-tabPanel("Word Cloud", 
+tabPanel("Sentiment Analysis", 
          fluidPage(
-           titlePanel("Sentiment Word Cloud for Comments"),
+           titlePanel("Sentiment Word Cloud of Comments in Survey"),
            sidebarLayout(
              sidebarPanel(
                selectInput("country", "Select Country:",
