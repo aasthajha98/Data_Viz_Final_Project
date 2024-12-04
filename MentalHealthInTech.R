@@ -203,9 +203,57 @@ tabPanel("Sentiment Analysis",
              )
            )
          )
-)
+),
+tabPanel("Insights by States", 
+         fluidPage(
+           titlePanel("Bar Charts of Survey Insights"),
+           sidebarLayout(
+             sidebarPanel(
+               selectInput(
+                 inputId = "input_state",
+                 label = "State:",
+                 choices = c("All States", sort(unique(us_data$state))),
+                 selected = "All States"
+               ),
+               selectInput(
+                 inputId = "input_tech",
+                 label = "Tech Company?:",
+                 choices = sort(unique(us_data$tech_company)),
+                 selected = "Yes"
+               )
+             ),
+             mainPanel(
+               fluidRow(
+                 column(
+                   width = 12,
+                   h3("Treatment vs. Gender"),
+                   plotlyOutput("bar_chart_treatment_gender", height = "auto"),
+                   tags$p("This chart shows the percentage of respondents receiving treatment based on their gender."),
+                   tags$div(style = "margin-bottom: 40px;")
+                 )
+               ),
+               fluidRow(
+                 column(
+                   width = 12,
+                   h3("Leave Policies vs. Company Size"),
+                   plotlyOutput("bar_chart_leave_company", height = "auto"),
+                   tags$p("This chart displays how leave policies are perceived by employees across different company sizes."),
+                   tags$div(style = "margin-bottom: 40px;")
+                 )
+               ),
+               fluidRow(
+                 column(
+                   width = 12,
+                   h3("Work Interference vs. Tech Company"),
+                   plotlyOutput("bar_chart_work_interfere_tech", height = "auto"),
+                   tags$p("This chart compares the levels of work interference reported by employees in tech vs. non-tech companies."),
+                   tags$div(style = "margin-bottom: 40px;")
+                 )
+               )
+             )
+           )
+         )))
 
-)
 
 # Define server logic
 server <- function(input, output) {
@@ -497,6 +545,86 @@ server <- function(input, output) {
       layout(
         dragmode = "zoom",  # Enable zooming and panning
         margin = list(l = 0, r = 0, t = 50, b = 0)  # Reduce margins
+      )
+  })
+  
+  # Filtered data for bar charts
+  d <- reactive({
+    us_data %>%
+      filter(
+        (input$input_state == "All States" | state == input$input_state)
+      )
+  })
+  
+  # Bar Chart: Treatment vs Gender
+  output$bar_chart_treatment_gender <- renderPlotly({
+    agg_data <- d() %>%
+      group_by(Gender, treatment) %>%
+      summarise(Count = n(), .groups = "drop") %>%
+      mutate(Percentage = Count / sum(Count) * 100)
+    
+    plot_ly(
+      data = agg_data,
+      x = ~Gender,
+      y = ~Percentage,
+      color = ~treatment,
+      type = "bar",
+      text = ~paste("Count:", Count, "<br>Percentage:", round(Percentage, 1), "%"),
+      hoverinfo = "text"
+    ) %>%
+      layout(
+        title = "Treatment vs. Gender",
+        xaxis = list(title = "Gender"),
+        yaxis = list(title = "Percentage (%)"),
+        barmode = "stack"
+      )
+  })
+  
+  # Bar Chart: Leave Policies vs Company Size
+  output$bar_chart_leave_company <- renderPlotly({
+    agg_data <- d() %>%
+      group_by(no_employees, leave) %>%
+      summarise(Count = n(), .groups = "drop") %>%
+      mutate(Percentage = Count / sum(Count) * 100)
+    
+    plot_ly(
+      data = agg_data,
+      x = ~no_employees,
+      y = ~Percentage,
+      color = ~leave,
+      type = "bar",
+      text = ~paste("Count:", Count, "<br>Percentage:", round(Percentage, 1), "%"),
+      hoverinfo = "text"
+    ) %>%
+      layout(
+        title = "Leave Policies vs. Company Size",
+        xaxis = list(title = "Company Size"),
+        yaxis = list(title = "Percentage (%)"),
+        barmode = "group"
+      )
+  })
+  
+  # Bar Chart: Work Interference vs Tech Company
+  output$bar_chart_work_interfere_tech <- renderPlotly({
+    agg_data <- d() %>%
+      group_by(tech_company, work_interfere) %>%
+      summarise(Count = n(), .groups = "drop") %>%
+      mutate(Percentage = Count / sum(Count) * 100)
+    
+    plot_ly(
+      data = agg_data,
+      x = ~tech_company,
+      y = ~Percentage,
+      color = ~work_interfere,
+      type = "bar",
+      text = ~paste("Count:", Count, "<br>Percentage:", round(Percentage, 1), "%"),
+      hoverinfo = "text"
+    ) %>%
+      layout(
+        title = "Work Interference vs. Tech Company",
+        xaxis = list(title = "Tech Company"),
+        yaxis = list(title = "Percentage (%)"),
+        barmode = "group"
       )
   })
   
