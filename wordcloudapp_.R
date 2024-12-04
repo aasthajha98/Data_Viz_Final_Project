@@ -68,8 +68,8 @@ ui <- fluidPage(
       # actionButton("update", "Update Word Cloud")
     ),
     mainPanel(
-      tags$p("\nThe sentiment were used with the lexicon 'bing' that gives
-             scores from -1 (negative) to 1 (positive) based on the value of 
+      tags$p("\nThe sentiment were used with the lexicon 'affin' that gives
+             scores from -5 (negative) to 5 (positive) based on the value of 
              each of the words in the comment."),
       plotOutput("percentage_bar", height = "100px"),
       plotOutput("word_cloud")
@@ -82,7 +82,7 @@ ui <- fluidPage(
 # Define server logic
 server <- function(input, output) {
   # Filtered dataset based on input
-  filtered_data <- reactive({
+  filtered_data_1 <- reactive({
     data <- dataset
     if (input$country != "All") {
       data <- data %>% filter(Country == input$country)
@@ -103,8 +103,8 @@ server <- function(input, output) {
   })
   # Percentage bar of the number of comments
   output$percentage_bar <- renderPlot({
-    req(filtered_data())
-    data <- filtered_data()
+    req(filtered_data_1())
+    data <- filtered_data_1()
     total_comments <- nrow(dataset)
     filtered_comments <- nrow(data)
     
@@ -145,10 +145,10 @@ server <- function(input, output) {
   })
   
   output$word_cloud <- renderPlot({
-    comment <- filtered_data()$comments
+    comment <- filtered_data_1()$comments
     
     # Tokenize and remove stop words
-    comments <- filtered_data()$comments
+    comments <- filtered_data_1()$comments
     comments <- na.omit(comments) 
     comments <- tolower(paste(comments, collapse = " ")) 
     

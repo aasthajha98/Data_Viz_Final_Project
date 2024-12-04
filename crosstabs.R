@@ -9,7 +9,9 @@ library(tidyr)
 dataset <- read.csv("survey_cleaned.csv", stringsAsFactors = FALSE)
 
 # UI
-ui <- fluidPage(
+ui <- 
+  tabPanel("", 
+           fluidPage(
   titlePanel("Mental Health Survey Visualizations"),
   sidebarLayout(
     sidebarPanel(
@@ -29,12 +31,13 @@ ui <- fluidPage(
     )
   )
 )
+)
 
 # server
 server <- function(input, output) {
   
   # Reactive dataset filtered by gender
-  filtered_data <- reactive({
+  filtered_data_2 <- reactive({
     if (input$gender == "All") {
       dataset
     } else {
@@ -61,7 +64,7 @@ server <- function(input, output) {
   
   # Render  selected plot
   output$selected_plot <- renderPlotly({
-    data <- filtered_data()
+    data <- filtered_data_2()
     
     if (input$plot_choice == "Age vs Work Interference") {
       plot <- ggplot(data, aes(x = work_interfere, y = Age)) +

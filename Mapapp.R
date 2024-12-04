@@ -42,7 +42,9 @@ states <- tigris::states(cb = TRUE, year = 2015) # Ensure this returns a valid s
 
 
 # UI
-ui <- fluidPage(
+ui <- 
+  tabPanel("Map", 
+           fluidPage(
   titlePanel("Choropleth of Work Interference by State"),
   sidebarLayout(
     sidebarPanel(
@@ -91,11 +93,13 @@ ui <- fluidPage(
       plotlyOutput("choropleth", height = "600px", width = "900px")  # Matches server dimensions
     )
   )
+ )
+
 )
 
 # Server
 server <- function(input, output, session) {
-  filtered_data <- reactive({
+  filtered_data_3 <- reactive({
     survey_data %>%
       filter(
         age_bin %in% input$age_bin,
@@ -117,7 +121,7 @@ server <- function(input, output, session) {
     }
     
     map_data <- states %>%
-      left_join(filtered_data(), by = c("STUSPS" = "state"))
+      left_join(filtered_data_3(), by = c("STUSPS" = "state"))
     
     # Create ggplot
     p <- ggplot(map_data) +
