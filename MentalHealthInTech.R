@@ -14,6 +14,10 @@ library(tidyr)
 library(shinyWidgets)
 library(sf)
 library(tigris)
+library(tidyverse)
+library(leaflet)
+library(leaflet.extras)
+library(shinythemes)
 
 # Load the dataset
 dataset <- read.csv("survey_cleaned.csv", stringsAsFactors = FALSE)
@@ -81,10 +85,48 @@ survey_data = survey_data %>%
 # Load state shapefile for the choropleth
 states <- tigris::states(cb = TRUE, year = 2015) # Ensure this returns a valid sf object
 
+us_data = survey_data %>%
+  filter(Country == 'United States')
+
+
+state_data = states()
+
+
+us_data_summarized = us_data %>%
+  mutate(work_interfere_num = case_when(work_interfere == "Often" ~ 4,
+                                        work_interfere == "Sometimes" ~ 3,
+                                        work_interfere == "Rarely" ~ 2,
+                                        work_interfere == "Never" ~ 1,
+                                        TRUE ~ 0),
+         obs_consequence_num = case_when(obs_consequence == "Yes" ~ 1,
+                                         obs_consequence == "No" ~ 0,
+                                         TRUE ~ 0)) %>%
+  group_by(state) %>%
+  summarise(avg_work_interfere = mean(work_interfere_num),
+            avg_obs_consequence = mean(obs_consequence_num))
+
+
+merged_data = merge(state_data, us_data_summarized, by.x = 'STUSPS',
+                    by.y = 'state')
+
+merged_data = merged_data %>%
+  st_transform(crs = 4326)
+
+bins = c(0, 1, 2, 3, 4)
+
+pal <- colorBin("YlOrRd", domain = merged_data$avg_work_interfere, bins = bins)
+
+
+
+merged_us_data_geom = merge(us_data, 
+                            state_data, 
+                            by.x = 'state', 
+                            by.y = "NAME")
+
+
 # Define UI
 ui <- navbarPage(
-  # Add an overall title for the navbar if needed
-  "Mental Health Survey Dashboard",
+  "Mental Health Survey Dashboard",theme = shinytheme("flatly"),
   
 tabPanel("Insights", 
            fluidPage(
@@ -204,56 +246,49 @@ tabPanel("Sentiment Analysis",
            )
          )
 ),
-tabPanel("Insights by States", 
-         fluidPage(
-           titlePanel("Bar Charts of Survey Insights"),
-           sidebarLayout(
-             sidebarPanel(
-               selectInput(
-                 inputId = "input_state",
-                 label = "State:",
-                 choices = c("All States", sort(unique(us_data$state))),
-                 selected = "All States"
-               ),
-               selectInput(
-                 inputId = "input_tech",
-                 label = "Tech Company?:",
-                 choices = sort(unique(us_data$tech_company)),
-                 selected = "Yes"
-               )
-             ),
-             mainPanel(
-               fluidRow(
-                 column(
-                   width = 12,
-                   h3("Treatment vs. Gender"),
-                   plotlyOutput("bar_chart_treatment_gender", height = "auto"),
-                   tags$p("This chart shows the percentage of respondents receiving treatment based on their gender."),
-                   tags$div(style = "margin-bottom: 40px;")
-                 )
-               ),
-               fluidRow(
-                 column(
-                   width = 12,
-                   h3("Leave Policies vs. Company Size"),
-                   plotlyOutput("bar_chart_leave_company", height = "auto"),
-                   tags$p("This chart displays how leave policies are perceived by employees across different company sizes."),
-                   tags$div(style = "margin-bottom: 40px;")
-                 )
-               ),
-               fluidRow(
-                 column(
-                   width = 12,
-                   h3("Work Interference vs. Tech Company"),
-                   plotlyOutput("bar_chart_work_interfere_tech", height = "auto"),
-                   tags$p("This chart compares the levels of work interference reported by employees in tech vs. non-tech companies."),
-                   tags$div(style = "margin-bottom: 40px;")
-                 )
-               )
-             )
-           )
-         )))
+tabPanel(
+  "Insights by State",
+  fluidRow(
+    column(
+      width = 4,
+      selectInput(
+        inputId = "input_state",
+        label = "State:",
+        choices = c("All States", sort(unique(us_data$state))),
+        selected = "All States"
+      )
+    )
+  ),
+  fluidRow(
+    column(
+      width = 12,
+      h3("Treatment vs. Gender"),
+      plotlyOutput("bar_chart_treatment_gender", height = "auto"),
+      tags$p("This chart shows the percentage of respondents receiving treatment based on their gender. Use the filters above to refine the data."),
+      tags$div(style = "margin-bottom: 40px;")
+    )
+  ),
+  fluidRow(
+    column(
+      width = 12,
+      h3("Leave Policies vs. Company Size"),
+      plotlyOutput("bar_chart_leave_company", height = "auto"),
+      tags$p("This chart displays how leave policies are perceived by employees across different company sizes. Adjust the filters to explore specific subsets."),
+      tags$div(style = "margin-bottom: 40px;")
+    )
+  ),
+  fluidRow(
+    column(
+      width = 12,
+      h3("Work Interference vs. Tech Company"),
+      plotlyOutput("bar_chart_work_interfere_tech", height = "auto"),
+      tags$p("This chart compares the levels of work interference reported by employees in tech vs. non-tech companies. Apply filters to focus on specific groups."),
+      tags$div(style = "margin-bottom: 40px;")
+    )
+  )
+)
 
+)
 
 # Define server logic
 server <- function(input, output) {
@@ -547,16 +582,14 @@ server <- function(input, output) {
         margin = list(l = 0, r = 0, t = 50, b = 0)  # Reduce margins
       )
   })
-  
-  # Filtered data for bar charts
+  # Filtered data reactive expression
   d <- reactive({
     us_data %>%
       filter(
         (input$input_state == "All States" | state == input$input_state)
       )
   })
-  
-  # Bar Chart: Treatment vs Gender
+  # bar_chart_1: Treatment vs. Gender
   output$bar_chart_treatment_gender <- renderPlotly({
     agg_data <- d() %>%
       group_by(Gender, treatment) %>%
@@ -580,7 +613,7 @@ server <- function(input, output) {
       )
   })
   
-  # Bar Chart: Leave Policies vs Company Size
+  # bar_chart_2: Leave Policies vs. Company Size
   output$bar_chart_leave_company <- renderPlotly({
     agg_data <- d() %>%
       group_by(no_employees, leave) %>%
@@ -604,7 +637,7 @@ server <- function(input, output) {
       )
   })
   
-  # Bar Chart: Work Interference vs Tech Company
+  # bar_chart_3: Work Interference vs. Tech Company
   output$bar_chart_work_interfere_tech <- renderPlotly({
     agg_data <- d() %>%
       group_by(tech_company, work_interfere) %>%
