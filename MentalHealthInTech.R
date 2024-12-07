@@ -18,6 +18,7 @@ library(tidyverse)
 library(leaflet)
 library(leaflet.extras)
 library(shinythemes)
+library(scales)
 
 # Set the colors for the plots
 # Create custom color palette
@@ -161,65 +162,90 @@ tabPanel("Insights",
                  )
                ),
                mainPanel(
-                 textOutput("plot_subtitle"),
-                 plotlyOutput("selected_plot", width = "100%", height = "700px")
+                 wellPanel(
+                   textOutput("plot_subtitle")
+                 ),
+                 wellPanel(
+                   plotlyOutput("selected_plot", width = "100%", height = "700px")
+                 ),
+                 wellPanel(
+                   textOutput("plot_description")
+                 )
                )
+               
              )
            )
   ),
   
   tabPanel("Work Interference in the US", 
-           fluidPage(
-             titlePanel("Choropleth of Work Interference by State"),
-             sidebarLayout(
-               sidebarPanel(
-                 pickerInput(
-                   inputId = "age_bin",
-                   label = "Filter by Age Bin",
-                   choices = unique(levels(survey_data$age_bin)),
-                   selected = unique(survey_data$age_bin),
-                   multiple = TRUE,
-                   options = list(`actions-box` = TRUE)
-                 ),
-                 pickerInput(
-                   inputId = "gender3",
-                   label = "Filter by Gender",
-                   choices = unique(survey_data$Gender),
-                   selected = unique(survey_data$Gender),
-                   multiple = TRUE,
-                   options = list(`actions-box` = TRUE)
-                 ),
-                 pickerInput(
-                   inputId = "no_employees",
-                   label = "Filter by Number of Employees",
-                   choices = unique(levels(survey_data$no_employees)),
-                   selected = unique(survey_data$no_employees),
-                   multiple = TRUE,
-                   options = list(`actions-box` = TRUE)
-                 ),
-                 pickerInput(
-                   inputId = "remote_work",
-                   label = "Filter by Remote Work",
-                   choices = unique(survey_data$remote_work),
-                   selected = unique(survey_data$remote_work),
-                   multiple = TRUE,
-                   options = list(`actions-box` = TRUE)
-                 ),
-                 pickerInput(
-                   inputId = "tech_company",
-                   label = "Filter by Tech Company",
-                   choices = unique(survey_data$tech_company),
-                   selected = unique(survey_data$tech_company),
-                   multiple = TRUE,
-                   options = list(`actions-box` = TRUE)
-                 )
-               ),
-               mainPanel(
-                 plotlyOutput("choropleth", height = "600px", width = "900px")
-               )
-             )
-           )
-  ),
+  fluidPage(
+    titlePanel("Choropleth of Work Interference by State"),
+    sidebarLayout(
+      sidebarPanel(
+        pickerInput(
+          inputId = "age_bin",
+          label = "Filter by Age Bin",
+          choices = unique(levels(survey_data$age_bin)),
+          selected = unique(survey_data$age_bin),
+          multiple = TRUE,
+          options = list(`actions-box` = TRUE)
+        ),
+        pickerInput(
+          inputId = "gender3",
+          label = "Filter by Gender",
+          choices = unique(survey_data$Gender),
+          selected = unique(survey_data$Gender),
+          multiple = TRUE,
+          options = list(`actions-box` = TRUE)
+        ),
+        pickerInput(
+          inputId = "no_employees",
+          label = "Filter by Number of Employees",
+          choices = unique(levels(survey_data$no_employees)),
+          selected = unique(levels(survey_data$no_employees)),
+          multiple = TRUE,
+          options = list(`actions-box` = TRUE)
+        ),
+        pickerInput(
+          inputId = "remote_work",
+          label = "Filter by Remote Work",
+          choices = unique(survey_data$remote_work),
+          selected = unique(survey_data$remote_work),
+          multiple = TRUE,
+          options = list(`actions-box` = TRUE)
+        ),
+        pickerInput(
+          inputId = "tech_company",
+          label = "Filter by Tech Company",
+          choices = unique(survey_data$tech_company),
+          selected = unique(survey_data$tech_company),
+          multiple = TRUE,
+          options = list(`actions-box` = TRUE)
+        )
+      ),
+      mainPanel(
+        plotlyOutput("choropleth", height = "600px", width = "900px"),
+        # Add an explanatory panel
+        wellPanel(
+          tags$h4("How to Read This Visualization"),
+          tags$p(
+            "This choropleth map shows the average rate of work interference reported by survey respondents across different U.S. states. ", 
+            "The color intensity represents the severity of work interference: lighter colors indicate higher rates of interference."
+          ),
+          tags$h4("Key insights"),
+          tags$p(
+            "We can see that the colors across states are much darker when we filter on just the 45+ age groups compared the below 45 age groups which indicates tha elder people do not report mental health interfering with their work as much as younger employees do.", 
+            "This tracks with existing knowledge about older demographics not being as open about speaking of their mental health as those from younger demographics and thus being less likely to report those effects to a survey.",
+            "We also see that when filtering on remote work vs no remote work that the distribution is much lighter in color across states when looking at respondants at companies that do not offer remote work."
+          ),
+          tags$p(
+            HTML("<strong>Note:</strong> Grayed-out states indicate that no survey data was available for those locations.")
+          )
+        )
+      )
+    )
+  )
+),
 tabPanel("Sentiment Analysis", 
          fluidPage(
            titlePanel("Sentiment Word Cloud of Comments in Survey"),
@@ -536,12 +562,33 @@ server <- function(input, output) {
     }
   })
   
+  # Reactive description text
+  output$plot_description <- renderText({
+    if (input$plot_choice == "Age vs Work Interference") {
+      return("Age does not ..")
+    } else if (input$plot_choice == "Company Size vs Mental Health Benefits") {
+      return("We can see that larger companies tend to have employees who are more aware of the benefits available to them. We can also see that female employees tend to be more aware of mental health benefits available to them.")
+    } else if (input$plot_choice == "Remote Work vs Treatment") {
+      return("From this plot we can see that when all genders are aggregated, there is a slightly larger uptake in mental health treatment by employees who work remotely. 
+             When breaking down by gender, we see that female remote workers are more likely to get mental health treatment but non remote workers are less likely to get treatment.
+             Among male workers, we see that across both working groups, male workers are less likely to get treatment for mental health.")
+    } else if (input$plot_choice == "Mental vs Physical Health Consequences") {
+      return("A majority of employees do not think there will be consequences to speaking out about both mental and physical health issues with their employers.")
+    } else if (input$plot_choice == "Supervisor Support vs Coworker Support") {
+      return("Employees who do no feel comfortable talking to a coworker about mental health issues also do not feel comfortable discussing mental health issues with a supervisor. 
+             Of employees willing to talk to a coworker about mental health issues, 86% are willing to talk to a superviser as well.")
+    } else if (input$plot_choice == "Treatment vs Family History") {
+      return("Employees with a family history of treatment are far more likely to seek treatment for mental health issues than employees without a family history of mental health issues. 
+             Female employees are more likely to receive treatment whether or not there is a family history of mental health issues.")
+    }
+  })
+  
   # Reactive subtitle text
   output$plot_subtitle <- renderText({
     if (input$plot_choice == "Age vs Work Interference") {
       return("Q: If you have a mental health condition, do you feel that it interferes with your work?")
     } else if (input$plot_choice == "Company Size vs Mental Health Benefits") {
-      return("Q: Does your employer provide mental health benefits?")
+      return("Q: Does your employer provide mental health benefits?.")
     } else if (input$plot_choice == "Remote Work vs Treatment") {
       return("Q: Do you work remotely (outside of an office) at least 50% of the time?\nQ: Have you sought treatment for a mental health condition?")
     } else if (input$plot_choice == "Mental vs Physical Health Consequences") {
@@ -558,7 +605,7 @@ server <- function(input, output) {
     data <- filtered_data_2()
     
     if (input$plot_choice == "Age vs Work Interference") {
-      plot <- ggplot(data, aes(x = work_interfere, y = Age)) +
+      plot <- ggplot(data %>% filter(!is.na(work_interfere), !is.na(Age)), aes(x = work_interfere, y = Age)) +
         geom_point(alpha = 0.7, color = "#377eb8") +
         labs(x = "Work Interference", y = "Age") +
         theme_minimal(base_size = 15)
