@@ -3,6 +3,8 @@
 Mental health awareness has been on the public's agendas over the last years. Tech is an area of increasing interest regarding mental heath because of the 
 long hours of working and their insititutional culture. This dashboard explores different data associations possible with the data.
 
+The dashboard is published here: 
+
 ## Dashboard
 The dashboard has data on the characteristics of the workers and the companies they work for, insights from the US workers by state and a sentiment analysis 
 of the comments left by the respondents. This were the steps and general ideas taken in the dashboard:
@@ -29,9 +31,6 @@ Visualize differences in responses geographically
 Process textual commentary to understand important themes
 
 Understanding these areas will assist in developing a policy recommendation surrounding mental health in the tech industry.
-
-
-The dashboard is published here: 
 
 ## Data
 This project uses data from the Mental Health in Tech Survey took in 2014 retireved from Kaggle https://www.kaggle.com/datasets/osmi/mental-health-in-tech-survey.
