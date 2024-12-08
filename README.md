@@ -3,7 +3,7 @@
 Mental health awareness has been on the public's agendas over the last years. Tech is an area of increasing interest regarding mental heath because of the 
 long hours of working and their insititutional culture. This dashboard explores different data associations possible with the data.
 
-The dashboard is published here: 
+The dashboard is published here: https://bridgettesullivan.shinyapps.io/Mental_Health_In_Tech_Data_Viz_Proj/ 
 
 ## Dashboard
 The dashboard has data on the characteristics of the workers and the companies they work for, insights from the US workers by state and a sentiment analysis 
