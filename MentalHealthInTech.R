@@ -152,8 +152,7 @@ tabPanel("Insights",
                                "Remote Work vs Treatment",
                                "Mental vs Physical Health Consequences",
                                "Supervisor Support vs Coworker Support",
-                               "Treatment vs Family History",
-                               "Age vs Work Interference"
+                               "Treatment vs Family History"
                                
                              )
                  ),
@@ -339,7 +338,7 @@ tabPanel(
       width = 12,
       h3("Treatment vs. Gender"),
       plotlyOutput("bar_chart_treatment_gender", height = "auto"),
-      tags$p("This chart shows the percentage of respondents receiving treatment based on their gender. Use the filters above to refine the data."),
+      tags$p("This chart shows the distribution of counts of respondents receiving treatment based on their gender. Use the filters above to refine the data."),
       tags$div(style = "margin-bottom: 40px;")
     )
   ),
@@ -763,12 +762,13 @@ server <- function(input, output) {
     agg_data <- d() %>%
       group_by(Gender, treatment) %>%
       summarise(Count = n(), .groups = "drop") %>%
-      mutate(Percentage = Count / sum(Count) * 100)
+      mutate(Percentage = Count / sum(Count) * 100,
+             Count = Count)
     
     plot_ly(
       data = agg_data,
       x = ~Gender,
-      y = ~Percentage,
+      y = ~Count,
       color = ~treatment,
       type = "bar",
       text = ~paste("Count:", Count, "<br>Percentage:", round(Percentage, 1), "%"),
@@ -777,7 +777,7 @@ server <- function(input, output) {
       layout(
         title = "Treatment vs. Gender",
         xaxis = list(title = "Gender"),
-        yaxis = list(title = "Percentage (%)"),
+        yaxis = list(title = "Count"),
         barmode = "stack"
       )
   })
@@ -787,12 +787,13 @@ server <- function(input, output) {
     agg_data <- d() %>%
       group_by(no_employees, leave) %>%
       summarise(Count = n(), .groups = "drop") %>%
-      mutate(Percentage = Count / sum(Count) * 100)
+      mutate(Percentage = Count / sum(Count) * 100,
+             Count = Count)
     
     plot_ly(
       data = agg_data,
       x = ~no_employees,
-      y = ~Percentage,
+      y = ~Count,
       color = ~leave,
       type = "bar",
       text = ~paste("Count:", Count, "<br>Percentage:", round(Percentage, 1), "%"),
@@ -801,7 +802,7 @@ server <- function(input, output) {
       layout(
         title = "Leave Policies vs. Company Size",
         xaxis = list(title = "Company Size"),
-        yaxis = list(title = "Percentage (%)"),
+        yaxis = list(title = "Count"),
         barmode = "group"
       )
   })
@@ -811,12 +812,13 @@ server <- function(input, output) {
     agg_data <- d() %>%
       group_by(tech_company, work_interfere) %>%
       summarise(Count = n(), .groups = "drop") %>%
-      mutate(Percentage = Count / sum(Count) * 100)
+      mutate(Percentage = Count / sum(Count) * 100,
+             Count = Count)
     
     plot_ly(
       data = agg_data,
       x = ~tech_company,
-      y = ~Percentage,
+      y = ~Count,
       color = ~work_interfere,
       type = "bar",
       text = ~paste("Count:", Count, "<br>Percentage:", round(Percentage, 1), "%"),
@@ -825,7 +827,7 @@ server <- function(input, output) {
       layout(
         title = "Work Interference vs. Tech Company",
         xaxis = list(title = "Tech Company"),
-        yaxis = list(title = "Percentage (%)"),
+        yaxis = list(title = "Count"),
         barmode = "group"
       )
   })
