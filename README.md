@@ -12,7 +12,6 @@ of the comments left by the respondents. This were the steps and general ideas t
 ### Data Cleaning
 After obtaining the data, the first necessary step was to clean the data. Some variables had values that were impossible, like negative values in the Age column or values above 200 and below 17, that were updated to NA values. Additionally, the gender variable appeared to be a text entry column rather than a selection, so there are many different values with spelling errors and different capitalizations that had to be updated to accurately reflect gender groupings.
 
-Furthermore, there were some variables with missing values that had to be treated. 
 
 ### Creating Age Bins
 For ease of filtering in the visualizations, we created a binned measure for age. This allows the visualizations to be presented in the context of a range of ages rather than having to look at one specific age when interacting with the graphics.
